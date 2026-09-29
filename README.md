@@ -1,6 +1,6 @@
 # my-claude-skills
 
-Custom [Claude Code](https://claude.com/claude-code) skills.
+Custom (mostly vibe-coded, but reviewed) [Claude Code](https://claude.com/claude-code) skills.
 
 | Skill | Description |
 |-------|-------------|
