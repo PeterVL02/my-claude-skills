@@ -26,7 +26,7 @@ Read by the `ml-workflow` skill. Edit here, or run `/ml-workflow configure`.
 - Standard checkpoint: <how and how often, e.g. "weekdays 08:00, desktop scheduled task" / "manual">
 - Deep checkpoint: <every 30 days / every 4th checkpoint / manual>
 - Deep code changes: <report-only / apply-safe (safe simplifications + small review fixes, each its own commit)>
-- Critical review findings block standard checkpoints until they're fixed, ticked in the deep report, or accepted.
+- Critical review and legal findings block standard checkpoints until they're fixed, ticked in the deep report, or accepted.
 - Context: <deadlines, crunch periods, compute freezes that change how checkpoints run, e.g. "paper deadline 2026-11-15: no research or council until then"; or "none">
 
 | Step | Standard | Deep |
@@ -39,6 +39,7 @@ Read by the `ml-workflow` skill. Edit here, or run `/ml-workflow configure`.
 | council | no | yes |
 | review (`/agent-skills:review`) | no | yes |
 | simplify (`/agent-skills:code-simplify`, `ponytail-audit`, `ponytail-debt`) | no | yes |
+| legal (licenses, data protection, ethics) | no | yes |
 | plan (`/agent-skills:plan`) | no | yes |
 | extras (below) | yes | yes |
 
@@ -77,6 +78,17 @@ Never run these without my explicit go-ahead in the current session. For checks,
 - `data/raw/` is read-only. Never modify or delete it.
 - Data, model weights, and `.env` are never committed.
 - Splits are defined in `<configs/splits.yaml / src/pkg/data/split.py>`; don't change them without asking.
+
+## Legal and ethics
+Read by the `ml-workflow` skill (`references/legal-ethics.md`). Not legal advice; when unsure, ask the contact below.
+
+- Intended use of outputs: <research only / publication / commercial / open release of weights>. Project license: <MIT / none yet>.
+- License register: `docs/legal/licenses.md`. Add a row before using any new model, dataset, library, framework, service or copied code.
+- Sensitive data: <no / yes: what it is (e.g. voice recordings of identifiable speakers), under what terms (consent form, data-use agreement), which rules apply (GDPR, …)>
+- Never publish (commit or push): <e.g. anything under data/, audio of training speakers, speaker IDs, models trained on the data, per-speaker metrics; or "standard rules only">
+- Commits: <ask before every commit (default when there's sensitive data; enforced by the `git commit` ask rule) / commit without asking / exceptions, e.g. "checkpoint branches may commit without asking">
+- Publishing outputs (weights, samples, demos, papers) requires: <e.g. speaker-anonymity check passed + supervisor sign-off; or "nothing extra">
+- Contact for legal/data questions: <supervisor / data owner / DPO>
 
 ## Code conventions
 - Python <3.11+>, type hints on public functions, docstrings on modules and public APIs.

@@ -14,7 +14,7 @@ Read the repo, `PROGRESS.md` and git activity first, so each question comes with
 
 1. **Standard checkpoint: how and how often?** Options include a daily or weekly scheduled task, or manual only. Suggest a cadence from how active the repo is (commits per week).
 2. **Deep checkpoint: how often?** `every N days` (default 30), `every Nth checkpoint`, or `manual`. Suggest shorter intervals for fast-moving or deadline-driven projects.
-3. **Extra steps in the standard checkpoint?** (multi-select) research, council, review, simplify. Default: none; they stay in the deep checkpoint only.
+3. **Extra steps in the standard checkpoint?** (multi-select) research, council, review, simplify, legal. Suggest legal for projects with sensitive data. Default: none; they stay in the deep checkpoint only.
 4. **Deep checkpoint code changes?** `report-only` (default) or `apply-safe`. `apply-safe` applies behaviour-preserving simplifications and small review fixes (see "Small fixes"), each as its own commit on the checkpoint branch.
 
 Then ask in one plain line whether there's any context that should change how checkpoints run: a deadline, a crunch period, a paused workstream, a compute freeze. Record the answer under "Context", or write "none".
@@ -70,7 +70,7 @@ Apply at most 10 fixes per checkpoint so the branch stays easy to review.
 
 ## Blocking
 
-Critical review findings from a deep checkpoint block the standard checkpoints that follow, until they're resolved. The idea is that routine health passes don't pile up on top of a known serious problem.
+Critical review and legal findings from a deep checkpoint block the standard checkpoints that follow, until they're resolved. The idea is that routine health passes don't pile up on top of a known serious problem.
 
 - **What blocks:** every unticked item under "Blocking findings" in the newest deep checkpoint's report. A new deep checkpoint re-checks the previous deep checkpoint's open items and carries the unresolved ones into its own list, keeping their IDs (e.g. `B1 (from 2026-09-30)`). That way the newest deep report is always the complete list.
 - **An item is resolved when either:**

@@ -22,7 +22,8 @@ project/
 │   ├── research/log.md
 │   ├── checkpoints/
 │   ├── progress-archive/     # old PROGRESS.md work-log entries
-│   └── decisions/            # short ADRs for big choices
+│   ├── decisions/            # short ADRs for big choices
+│   └── legal/licenses.md     # license register (see references/legal-ethics.md)
 ├── notebooks/                # exploration only; logic moves to src/
 ├── models/                   # gitignored weights/checkpoints
 ├── reports/                  # figures, metrics, data stats
@@ -46,7 +47,7 @@ project/
 - Conventional commits: `feat: …`, `fix: …`, `data: …`, `exp: …`, `test: …`, `ci: …`, `docs: …`, `chore: …`, `refactor: …`.
 - Small, focused commits. Don't mix a refactor with a behaviour change.
 - One PR per branch, with a description of what changed, how it was tested, and any metric changes.
-- Before asking to push or open a PR, run `/agent-skills:review` (and `ponytail-review` on the diff) if installed, and make sure `PROGRESS.md` reflects the branch's work.
+- Before asking to push or open a PR, run `/agent-skills:review` (and `ponytail-review` on the diff) if installed, and make sure `PROGRESS.md` reflects the branch's work. In sensitive projects, also run the publish check over everything the push would publish (`references/legal-ethics.md`).
 - The `git-workflow-and-versioning` companion skill's advice on atomic commits applies; its trunk-based model does not override the branch rule above.
 
 ## Remote actions (important)

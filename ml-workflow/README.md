@@ -1,6 +1,6 @@
 # ml-workflow
 
-A Claude Code skill for keeping AI/ML/data-science projects healthy: data pipelines, sanity checks, research, council direction reviews, a project log, a codebase knowledge graph, git hygiene, tests and CI.
+A Claude Code skill for keeping AI/ML/data-science projects healthy: data pipelines, sanity checks, research, council direction reviews, license and legal/ethics checks, a project log, a codebase knowledge graph, git hygiene, tests and CI.
 
 ## Install
 
@@ -69,6 +69,7 @@ This adds, without overwriting existing files:
 | `.pre-commit-config.yaml` | ruff, hygiene hooks, notebook output stripping |
 | `.gitignore` additions | Data, weights, experiment logs, secrets |
 | `docs/research/`, `docs/checkpoints/`, `docs/decisions/` | Research log, checkpoint reports, ADRs |
+| `docs/legal/licenses.md` | License register: every model, dataset, framework, library, service and copied code, with obligations and status |
 
 For an existing project, setup reconstructs `PROGRESS.md` from git history and asks you to fill the gaps. Setup also asks how this project's checkpoints should run (see below), and offers `/agent-skills:constraints` to set a quality bar.
 
@@ -87,6 +88,7 @@ Only repos where you run setup get these files; other projects are unaffected.
 | `/ml-workflow research` | One focused literature/project search, logged |
 | `/ml-workflow council` | Direction, priorities, research needs, corrections |
 | `/ml-workflow progress` | Update `PROGRESS.md` from recent work |
+| `/ml-workflow legal` | Update the license register; run the legal/ethics review |
 | `/ml-workflow graph` | Rebuild the graphify knowledge graph |
 | `/ml-workflow ci` | Run tests/linters locally, check CI status |
 
@@ -97,7 +99,7 @@ Plain language also works: `/ml-workflow check the pipeline and update progress`
 There are two kinds of checkpoint:
 
 - **Standard**: a frequent, cheap health pass. By default it refreshes the graph, then runs tests/linters, then the pipeline check, then sanity checks.
-- **Deep**: less frequent. It adds a research round, the council, code review (`/agent-skills:review`), simplification (`/agent-skills:code-simplify`, `ponytail-audit`, `ponytail-debt`) and a proposed task plan (`/agent-skills:plan` → `tasks/plan.md`, ready for `/agent-skills:build` once you approve it).
+- **Deep**: less frequent. It adds a research round, the council, code review (`/agent-skills:review`), simplification (`/agent-skills:code-simplify`, `ponytail-audit`, `ponytail-debt`), a legal and ethics review (licenses vs intended use, GDPR, whether outputs could identify people) and a proposed task plan (`/agent-skills:plan` → `tasks/plan.md`, ready for `/agent-skills:build` once you approve it).
 
 Each project configures its own checkpoints in `CLAUDE.md` → "Checkpoints":
 - how often each kind runs (deep: every N days, every Nth checkpoint, or manual)
@@ -111,7 +113,7 @@ Both kinds work on a branch (`chore/checkpoint-YYYY-MM-DD` or `chore/deep-checkp
 
 Checkpoints find earlier runs through their branch names too, so you don't have to merge every checkpoint branch.
 
-**Blocking:** Critical findings from a deep checkpoint's code review are listed as checkboxes under "Blocking findings" in its report. Until each one is resolved, standard checkpoints don't run. A scheduled run just prints a notice; an interactive one asks whether to run anyway. An item counts as resolved when any of these is true:
+**Blocking:** Critical findings from a deep checkpoint's code review or legal review are listed as checkboxes under "Blocking findings" in its report. Until each one is resolved, standard checkpoints don't run. A scheduled run just prints a notice; an interactive one asks whether to run anyway. An item counts as resolved when any of these is true:
 - the fix is merged into the default branch
 - it's ticked in the report
 - you tell Claude it's accepted or deferred
@@ -124,6 +126,8 @@ A new deep checkpoint re-checks the open items.
 - **Branches only**, never commits to `main`. Overrides trunk-based advice from other skills.
 - **Compute budget**: no full training, sweeps, full pipeline runs or GPU jobs unless you ask. Checks use smoke configs, `--limit`, or existing logs; ~5 min per command during checkpoints. Expensive commands are listed in `CLAUDE.md` and added as `ask` rules.
 - **Raw data is read-only**; data, weights and secrets are never committed.
+- **Licenses are registered before first use** in `docs/legal/licenses.md`. Unverified licenses stay `unclear`.
+- **Sensitive data**: if `CLAUDE.md` → "Legal and ethics" marks the project as sensitive, Claude reads every staged diff before committing and every push range before asking to push. It holds back anything on the never-publish list, and anything it's unsure about. Every commit needs your approval (a `git commit` `ask` rule), unless you allow otherwise in the session or in `CLAUDE.md` → "Legal and ethics" → "Commits". Pre-commit hooks block sensitive paths and identifier patterns for manual commits too. This is a safety net, not legal advice; open questions go to the contact named in `CLAUDE.md`.
 - **Rejected ideas stay rejected**: Claude checks `PROGRESS.md` before re-proposing something.
 
 Check that `ask` patterns match how you launch commands: `Bash(python train.py:*)` does not catch `uv run python train.py`.
@@ -153,6 +157,7 @@ ml-workflow/
 │   ├── council.md
 │   ├── progress.md
 │   ├── checkpoints.md        # checkpoint config interview + defaults
+│   ├── legal-ethics.md       # license register, publish check, legal/ethics review
 │   └── git-and-ci.md
 └── templates/                # copied into repos by setup
     ├── CLAUDE.md
@@ -160,6 +165,7 @@ ml-workflow/
     ├── settings.json
     ├── ci.yml
     ├── pre-commit-config.yaml
+    ├── licenses.md
     └── gitignore
 ```
 
@@ -172,4 +178,5 @@ ml-workflow/
 | Repo lacks new features after updating the skill | Setup only copies templates once; ask Claude to re-run the relevant setup step |
 | Scheduled checkpoint does nothing and prints "blocked" | Open Critical findings from the last deep checkpoint; fix and merge, tick them in its report, or tell Claude they're accepted |
 | Checkpoint stalls unattended | Permission prompt; set the scheduled task to automatic approval, or run interactively |
+| Scheduled checkpoint leaves changes uncommitted | Sensitive project with commit approval on; review and commit them yourself, or add a "Commits" exception in `CLAUDE.md` and remove the `git commit` `ask` rule |
 | A companion skill isn't used | Check it's installed in the same Claude install; plugin skills may be namespaced (`agent-skills:…`) |
