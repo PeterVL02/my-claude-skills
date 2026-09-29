@@ -1,11 +1,11 @@
 # my-claude-skills
 custom claude skills
 
-# ml-workflow
+## ml-workflow
 
 A Claude Code skill for keeping AI/ML/data-science projects healthy: data pipelines, sanity checks, research, council direction reviews, a project log, a codebase knowledge graph, git hygiene, tests and CI.
 
-## Install
+### Install
 
 Skills live in `~/.claude/skills/<name>/SKILL.md`.
 
@@ -29,7 +29,7 @@ ln -s /mnt/c/Users/<you>/.claude/skills/ml-workflow ~/.claude/skills/ml-workflow
 
 Start a new Claude Code session afterwards; running sessions keep the old version.
 
-### Optional companions
+#### Optional companions
 
 - **Council skill** (`llm-council`): used for direction reviews.
 - **agent-skills** (addyosmani/agent-skills): TDD, debugging, code review, ADRs, etc. Used where installed.
@@ -38,7 +38,7 @@ Start a new Claude Code session afterwards; running sessions keep the old versio
 
 Everything degrades gracefully if a companion is missing.
 
-## Quick start
+### Quick start
 
 In an ML repo:
 
@@ -62,7 +62,7 @@ For an existing project, setup reconstructs `PROGRESS.md` from git history and a
 
 Only repos where you run setup get these files; other projects are unaffected.
 
-## Usage
+### Usage
 
 | Command | What it does |
 |---|---|
@@ -78,13 +78,13 @@ Only repos where you run setup get these files; other projects are unaffected.
 
 Plain language also works: `/ml-workflow check the pipeline and update progress`.
 
-### Checkpoint
+#### Checkpoint
 
 A periodic health pass. On branch `chore/checkpoint-YYYY-MM-DD` it: refreshes the graph → runs tests/linters → checks the pipeline → runs sanity checks → does a research round → asks the council → runs any "Checkpoint extras" → updates `PROGRESS.md` → writes `docs/checkpoints/YYYY-MM-DD.md` → commits and stops.
 
 The council's advice is recorded as *proposed*; nothing is acted on without your go-ahead. It's the heaviest mode (research + council take time and tokens).
 
-## Guardrails
+### Guardrails
 
 - **No pushing** without explicit instruction. Claude may ask to push, branch, or open a PR. Enforced by `.claude/settings.json` (`ask` rules), not just instructions.
 - **Branches only**, never commits to `main`. Overrides trunk-based advice from other skills.
@@ -94,7 +94,7 @@ The council's advice is recorded as *proposed*; nothing is acted on without your
 
 Check that `ask` patterns match how you launch commands: `Bash(python train.py:*)` does not catch `uv run python train.py`.
 
-## Scheduling
+### Scheduling
 
 Run a checkpoint regularly as a scheduled task with the prompt `/ml-workflow checkpoint`:
 
@@ -104,7 +104,7 @@ Run a checkpoint regularly as a scheduled task with the prompt `/ml-workflow che
 
 Unattended runs commit to a branch and list pending pushes in the report. If the task isn't on automatic approval it will pause at the first action needing permission.
 
-## Customising
+### Customising
 
 - **Per project**: edit the repo's `CLAUDE.md` (commands, compute budget, research focus, checkpoint extras such as a diagram-refresh skill). It overrides the skill's defaults.
 - **Globally**: edit files in the skill folder.
@@ -128,7 +128,7 @@ ml-workflow/
     └── gitignore
 ```
 
-## Troubleshooting
+### Troubleshooting
 
 | Problem | Fix |
 |---|---|
