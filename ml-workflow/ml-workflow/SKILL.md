@@ -1,6 +1,6 @@
 ---
 name: ml-workflow
-description: Maintain an AI/ML/data-science project - data pipelines, sanity checks, research, council direction reviews, a PROGRESS.md project log, graphify code graph, git hygiene, tests and CI. Use in ML/data repos for setup, a periodic standard or deep "checkpoint" (cadence configured per project), or any one of these chores.
+description: Maintain an AI/ML/data-science project - data pipelines, sanity checks, research, council direction reviews, license register and legal/ethics (GDPR) checks, a PROGRESS.md project log, graphify code graph, git hygiene, tests and CI. Use in ML/data repos for setup, a periodic standard or deep "checkpoint" (cadence configured per project), or any one of these chores.
 ---
 
 # ML project workflow
@@ -16,6 +16,9 @@ Before doing anything, read the project's `CLAUDE.md` and `PROGRESS.md` if they 
 - Never force-push, rewrite published history, or delete branches you did not create.
 - Never modify or delete raw data (`data/raw/` or equivalent). Pipelines read raw and write derived data elsewhere.
 - Never commit data files, model weights, secrets, or `.env` files.
+- **Register every license.** Before first using a model, dataset, library, framework, service or copied code, add it to `docs/legal/licenses.md`, in the same commit. Unknown license = `unclear`, never `ok`. See `references/legal-ethics.md`.
+- **Sensitive projects: check before every commit and push.** If `CLAUDE.md` → "Legal and ethics" marks sensitive data, read the staged diff before each commit, and everything a push would publish before asking to push, following `references/legal-ethics.md` → "Publish check". If you're unsure about a file, don't commit it: ask, or hold it back and report it.
+- **Sensitive projects: every commit needs the user's approval.** Show the staged files and the publish-check result, then wait for a yes. The exception is when the user has explicitly allowed commits without asking, either in this session or as a standing rule in `CLAUDE.md` → "Legal and ethics" → "Commits". `.claude/settings.json` enforces this with an `ask` rule on `git commit`. Unattended, with no standing rule: don't commit. Leave the work staged on the checkpoint branch and say so in the report.
 - **Respect the compute budget.** Never start full training runs, hyperparameter sweeps, full-dataset pipeline runs, large downloads, or GPU/cluster jobs unless the user explicitly asks in this session. For checks, use the cheap variants listed under "Compute budget" in `CLAUDE.md` (smoke configs, `--limit`, a few steps, tiny fixtures), or read existing logs and metrics instead of re-running. If no cheap variant exists, skip that check, say so in the report, and propose adding one. Default ceiling for any single command during a checkpoint: about 5 minutes, unless `CLAUDE.md` says otherwise.
 - **Keep `PROGRESS.md` current.** After any meaningful work (experiment run, idea rejected, decision made, research finding, pipeline change), update it before finishing the task. See `references/progress.md`.
 - **Check before retrying.** Before proposing or starting an approach, check `PROGRESS.md` → "Tried and rejected". If it is listed, don't repeat it unless you state what is different this time.
@@ -34,6 +37,7 @@ Choose the mode from the user's request. With no specific request, or when invok
 | `sanity` | After data or model changes, before trusting results | `references/sanity-checks.md` |
 | `research` | Looking for related papers/projects or recent developments | `references/research.md` |
 | `council` | Direction, prioritisation, whether research is needed, course corrections | `references/council.md` |
+| `legal` | License register, publish check, legal/ethics review | `references/legal-ethics.md` |
 | `graph` | Refresh the code knowledge graph | below |
 | `ci` | Tests/CI failing, missing, or out of date | `references/git-and-ci.md` |
 | `checkpoint` | Periodic health pass; upgrades to deep when one is due | below |
@@ -80,9 +84,13 @@ These are separate skills that may be installed: the `agent-skills` plugin (addy
    - `templates/pre-commit-config.yaml` → `./.pre-commit-config.yaml`
    - `templates/gitignore` → append missing lines to `./.gitignore`
    Then find the expensive entry points (training, sweeps, full pipeline runs, evaluation on the full test set). List them in `CLAUDE.md` → "Compute budget", together with their cheap smoke variants, and add each expensive command to the `ask` list in `.claude/settings.json` (e.g. `"Bash(python -m mypkg.train:*)"`, `"Bash(python scripts/train.py:*)"`), so they always need approval. Show the user the list and ask whether anything is missing.
+   Then fill `CLAUDE.md` → "Legal and ethics". Ask about intended use, sensitive data, the never-publish list and the contact person. Create `docs/legal/licenses.md` from `templates/licenses.md` and fill it with the direct dependencies and every model, dataset and copied code you can find, leaving Status `unclear` for anything you couldn't verify. If the project has sensitive data:
+   - Add the backstop hooks from `references/legal-ethics.md` → "Mechanical backstop" to `.pre-commit-config.yaml`, with the regexes agreed with the user.
+   - Add `"Bash(git commit:*)"` to the `ask` list in `.claude/settings.json`, so every commit needs approval.
+   - Tell the user that unattended checkpoints will then leave their work uncommitted. Ask whether to record a standing exception under "Commits" (e.g. "checkpoint branches may commit without asking"); if they want one, remove the `ask` rule to match.
    Finally, fill `CLAUDE.md` → "Checkpoints" by running the interview in `references/checkpoints.md`. If the repo has no `CONSTRAINTS.md`, offer `/agent-skills:constraints` to set a quality bar (ask; don't run it unprompted).
 3. Create any missing standard folders from `references/git-and-ci.md` (with `.gitkeep` where empty). Do not move existing code without asking.
-4. Create `docs/research/log.md`, `docs/checkpoints/`, and `docs/decisions/` if missing.
+4. Create `docs/research/log.md`, `docs/checkpoints/`, `docs/decisions/`, and `docs/legal/` if missing.
 5. Fill `PROGRESS.md`. For an existing project, reconstruct it from git history, README, notebooks, and existing notes (see `references/progress.md` → "Reconstructing"), then ask the user to fill gaps, especially rejected ideas and why.
 6. Set up graphify (see **graph**).
 7. Run tests and pre-commit once so the user starts from a green state, or report what fails.
@@ -119,14 +127,15 @@ Run these steps in order, carrying findings forward. Skip any step the config tu
 8. **simplify** (deep): run `/agent-skills:code-simplify` on the same scope, then `ponytail-audit` for the whole repo and `ponytail-debt` for the shortcut ledger.
    - With `report-only` (the default), ask code-simplify for findings only and change nothing.
    - With `apply-safe`, let code-simplify apply behaviour-preserving changes one at a time, running tests after each and reverting any that fail. Commit them separately as `refactor: …`. Never auto-apply `ponytail-audit` deletions; they are judgement calls.
-9. **research**: one focused search round on the current problem (see reference for scope). Append to `docs/research/log.md`.
-10. **council**: give the council the evidence from the earlier steps plus `PROGRESS.md`, and ask the standard checkpoint questions in `references/council.md`.
-11. **plan** (deep): run `/agent-skills:plan` on the council's priorities plus the review and simplify findings. Write the plan to `tasks/plan.md` and `tasks/todo.md`, headed "Proposed by deep checkpoint YYYY-MM-DD, not approved".
+9. **legal** (deep): run the review in `references/legal-ethics.md` → "Deep-checkpoint review", covering the license register, compatibility with intended use, personal data, whether outputs can identify people, repo history, and ethics. Critical findings go under "Blocking findings". Add missing register rows. Change nothing else, even with `apply-safe`.
+10. **research**: one focused search round on the current problem (see reference for scope). Append to `docs/research/log.md`.
+11. **council**: give the council the evidence from the earlier steps plus `PROGRESS.md`, and ask the standard checkpoint questions in `references/council.md`.
+12. **plan** (deep): run `/agent-skills:plan` on the council's priorities plus the review, simplify and legal findings. Write the plan to `tasks/plan.md` and `tasks/todo.md`, headed "Proposed by deep checkpoint YYYY-MM-DD, not approved".
     - If those files hold an unfinished plan, write to `docs/checkpoints/YYYY-MM-DD-plan.md` instead.
     - Unattended, skip plan mode and its approval prompt. The plan waits for the user, who runs `/agent-skills:build` once they approve it.
-12. If the project's `CLAUDE.md` lists skills under "Checkpoint extras" (for example a diagram refresh), run them now.
-13. **progress**: update `PROGRESS.md` with everything learned in this checkpoint, including the council verdict and any ideas it recommended dropping.
-14. Write `docs/checkpoints/YYYY-MM-DD.md` (deep: `YYYY-MM-DD-deep.md`) using the report format below, commit, and stop. Ask (or, unattended, state in the report) whether to push and open a PR.
+13. If the project's `CLAUDE.md` lists skills under "Checkpoint extras" (for example a diagram refresh), run them now.
+14. **progress**: update `PROGRESS.md` with everything learned in this checkpoint, including the council verdict and any ideas it recommended dropping.
+15. Write `docs/checkpoints/YYYY-MM-DD.md` (deep: `YYYY-MM-DD-deep.md`) using the report format below, commit, and stop. Ask (or, unattended, state in the report) whether to push and open a PR.
 
 A checkpoint recommends; it does not act. Don't implement suggestions from the council, the review or the plan during a checkpoint. They go into "Suggested next steps" for the user to approve. The only exceptions are the simplifications and small review fixes that `apply-safe` allows.
 
@@ -139,7 +148,7 @@ A checkpoint recommends; it does not act. Don't implement suggestions from the c
 <3-5 lines: overall health, the one thing that most needs attention>
 
 ## Blocking findings     (deep only; omit if none. Standard checkpoints stay blocked until each item is resolved)
-- [ ] B1: <Critical finding> — `file:line` — <why it matters, suggested fix>
+- [ ] B1: <Critical finding (review or legal)> — `file:line` — <why it matters, suggested fix>
 
 ## Council verdict      (direction: on track / adjust / pivot; top priorities; research needed?)
 ## Changes since last checkpoint
@@ -150,6 +159,7 @@ A checkpoint recommends; it does not act. Don't implement suggestions from the c
 ## Codebase graph        (rebuilt? notable new god nodes / coupling)
 ## Code review           (deep: Critical/Important findings with file:line; small fixes applied, with commits)
 ## Simplification        (deep: code-simplify findings or applied commits; ponytail-audit top cuts; ponytail-debt ledger)
+## Legal & ethics        (deep: register rows added / unclear / conflict; data-protection and identifiability findings; "Needs a human answer" questions. Any run: "Held back" files not committed by the publish check)
 ## Plan                  (deep: link to the proposed plan, 3-5 line summary)
 ## Suggested next steps  (ordered, concrete; mark which came from the council)
 ## Pending remote actions (branches/PRs you would push, awaiting approval)
