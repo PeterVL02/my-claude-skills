@@ -4,27 +4,41 @@ A Claude Code skill for keeping AI/ML/data-science projects healthy: data pipeli
 
 ## Install
 
-Skills live in `~/.claude/skills/<name>/SKILL.md`.
+Skills live in `~/.claude/skills/<name>/SKILL.md`. The skill itself is the inner `ml-workflow/ml-workflow/` folder of this repo.
+
+Clone the repo and link the skill folder, so `git pull` updates it. If you installed from the old zip, delete that copy first. Otherwise the link fails, or it lands nested inside the old folder:
 
 ```bash
-# WSL / Linux / macOS
-rm -rf ~/.claude/skills/ml-workflow
-unzip ml-workflow.zip -d ~/.claude/skills/
+rm -rf ~/.claude/skills/ml-workflow                       # WSL / Linux / macOS
 ```
 
 ```powershell
-# Windows (native Claude Code)
-Remove-Item -Recurse -Force "$env:USERPROFILE\.claude\skills\ml-workflow" -ErrorAction SilentlyContinue
-Expand-Archive ml-workflow.zip -DestinationPath "$env:USERPROFILE\.claude\skills\"
+Remove-Item -Recurse -Force "$env:USERPROFILE\.claude\skills\ml-workflow"   # Windows
 ```
 
-Using both WSL and Windows? Keep one copy on the Windows side and symlink it from WSL:
+```bash
+# WSL / Linux / macOS
+git clone https://github.com/PeterVL02/my-claude-skills.git
+mkdir -p ~/.claude/skills
+ln -s "$PWD/my-claude-skills/ml-workflow/ml-workflow" ~/.claude/skills/ml-workflow
+```
+
+```powershell
+# Windows (native Claude Code). A junction needs no admin rights or Developer Mode.
+git clone https://github.com/PeterVL02/my-claude-skills.git
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\skills" | Out-Null
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\ml-workflow" -Target "$PWD\my-claude-skills\ml-workflow\ml-workflow"
+```
+
+If you'd rather not link, copy the folder instead (`cp -r` / `Copy-Item -Recurse`). To update it later, delete the copy and copy the folder again.
+
+Using both WSL and Windows? Install on the Windows side, then symlink it from WSL:
 
 ```bash
 ln -s /mnt/c/Users/<you>/.claude/skills/ml-workflow ~/.claude/skills/ml-workflow
 ```
 
-Start a new Claude Code session afterwards; running sessions keep the old version.
+Check that `~/.claude/skills/ml-workflow/SKILL.md` exists, then start a new Claude Code session. Sessions that are already running keep the old version.
 
 ### Optional companions
 
