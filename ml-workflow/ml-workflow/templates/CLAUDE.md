@@ -9,7 +9,7 @@
 - Research focus: <2-4 topics to track in literature/project searches>
 
 ## Workflow
-This is an ML/data project. Use the `ml-workflow` skill for pipeline maintenance, sanity checks, research, council reviews, the progress log, codebase graph, tests and CI. For a periodic health pass, run the skill in checkpoint mode. Where installed, use the agent-skills companions the skill lists (e.g. test-driven-development, debugging-and-error-recovery, code-review-and-quality). The rules in this file win over any skill.
+This is an ML/data project. Use the `ml-workflow` skill for pipeline maintenance, sanity checks, research, council reviews, the progress log, codebase graph, tests and CI. For a periodic health pass, run the skill in checkpoint mode. Where installed, use the agent-skills companions the skill lists (e.g. `/agent-skills:test`, `/agent-skills:review`, `/agent-skills:plan`, debugging-and-error-recovery). Whenever you write or change code, load the `ponytail` skill first. Don't load it for research, writing or planning. The rules in this file win over any skill.
 
 ### Progress log
 - Read `PROGRESS.md` at the start of any substantial task.
@@ -18,7 +18,31 @@ This is an ML/data project. Use the `ml-workflow` skill for pipeline maintenance
 - Rejected ideas always get a reason and a "revisit if".
 
 ### Council
-Run the council skill (`llm-council`) at every checkpoint and at real decision points (choosing between approaches, after surprising results, when stalled). Its output is advice: record it in `PROGRESS.md` as proposed, and don't act on it without my go-ahead.
+Run the council skill (`llm-council`) at checkpoints that include it (see "Checkpoints") and at real decision points (choosing between approaches, after surprising results, when stalled). Its output is advice: record it in `PROGRESS.md` as proposed, and don't act on it without my go-ahead.
+
+## Checkpoints
+Read by the `ml-workflow` skill. Edit here, or run `/ml-workflow configure`.
+
+- Standard checkpoint: <how and how often, e.g. "weekdays 08:00, desktop scheduled task" / "manual">
+- Deep checkpoint: <every 30 days / every 4th checkpoint / manual>
+- Deep code changes: <report-only / apply-safe (safe simplifications + small review fixes, each its own commit)>
+- Critical review findings block standard checkpoints until they're fixed, ticked in the deep report, or accepted.
+- Context: <deadlines, crunch periods, compute freezes that change how checkpoints run, e.g. "paper deadline 2026-11-15: no research or council until then"; or "none">
+
+| Step | Standard | Deep |
+|---|---|---|
+| graph | yes | yes |
+| ci | yes | yes |
+| pipeline | yes | yes |
+| sanity | yes | yes |
+| research | no | yes |
+| council | no | yes |
+| review (`/agent-skills:review`) | no | yes |
+| simplify (`/agent-skills:code-simplify`, `ponytail-audit`, `ponytail-debt`) | no | yes |
+| plan (`/agent-skills:plan`) | no | yes |
+| extras (below) | yes | yes |
+
+Progress update and the checkpoint report always run.
 
 ### Checkpoint extras
 <Optional: other skills to run during a checkpoint, e.g. "Update docs/pipeline.svg with the diagram skill". Delete if unused.>

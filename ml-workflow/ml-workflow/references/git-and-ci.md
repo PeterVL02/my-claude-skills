@@ -46,7 +46,7 @@ project/
 - Conventional commits: `feat: …`, `fix: …`, `data: …`, `exp: …`, `test: …`, `ci: …`, `docs: …`, `chore: …`, `refactor: …`.
 - Small, focused commits. Don't mix a refactor with a behaviour change.
 - One PR per branch, with a description of what changed, how it was tested, and any metric changes.
-- Before asking to push or open a PR, run `code-review-and-quality` if installed, and make sure `PROGRESS.md` reflects the branch's work.
+- Before asking to push or open a PR, run `/agent-skills:review` (and `ponytail-review` on the diff) if installed, and make sure `PROGRESS.md` reflects the branch's work.
 - The `git-workflow-and-versioning` companion skill's advice on atomic commits applies; its trunk-based model does not override the branch rule above.
 
 ## Remote actions (important)

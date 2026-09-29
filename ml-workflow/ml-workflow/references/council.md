@@ -4,7 +4,7 @@ Goal: regularly step back and ask whether the project is heading the right way, 
 
 ## When to run
 
-- Every checkpoint (step 8).
+- Checkpoints whose config includes the council step (by default, deep checkpoints only; see `references/checkpoints.md`).
 - At real decision points: choosing between approaches, after a disappointing or surprisingly good result, before a large refactor or a new data source, when progress has stalled.
 - When the user asks ("council this", "are we on the right track?").
 
