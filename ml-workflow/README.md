@@ -105,11 +105,33 @@ Each project configures its own checkpoints in `CLAUDE.md` → "Checkpoints":
 - how often each kind runs (deep: every N days, every Nth checkpoint, or manual)
 - which steps each kind runs
 - whether a deep checkpoint may apply safe simplifications and small review fixes (`apply-safe`: typos, unused imports and similar, each as its own commit, never touching data, metrics or configs) or only report them (`report-only`, the default)
+- whether checkpoint branches are pushed automatically (`auto`, the default, or `never`)
 - any context such as deadlines
 
-Setup asks for this, and so does a plain `/ml-workflow` in a project that has no config yet. Change it later with `/ml-workflow configure`.
+Setup asks for this, and so does a plain `/ml-workflow` in a project that has no config yet. If it's unclear whether the project holds sensitive data, you're asked that too before checkpoints run; "not sure" counts as sensitive until answered. Change it later with `/ml-workflow configure`.
 
-Both kinds work on a branch (`chore/checkpoint-YYYY-MM-DD` or `chore/deep-checkpoint-YYYY-MM-DD`), update `PROGRESS.md`, write a report to `docs/checkpoints/`, commit and stop. Advice from the council, the review and the plan is recorded as *proposed*; nothing is acted on without your go-ahead.
+Both kinds of checkpoint:
+- work on a branch (`chore/checkpoint-YYYY-MM-DD` or `chore/deep-checkpoint-YYYY-MM-DD`)
+- update `PROGRESS.md` and write a report to `docs/checkpoints/`
+- commit, then switch back to the branch you were on
+
+Advice from the council, the review and the plan is recorded as *proposed*; nothing is acted on without your go-ahead.
+
+**Auto-push:** with `auto`, the checkpoint pushes its own branch, but only when all of these hold:
+- the project has no sensitive data
+- every model and dataset in the license register is `ok` with a permissive license (MIT, Apache-2.0, BSD, CC0, CC BY, …)
+- nothing in the register is a `conflict`
+- no legal blocking finding is open
+- the branch passes the publish check
+
+Otherwise the report says why it wasn't pushed. Checkpoints never open PRs on their own, and never push other branches.
+
+**When a checkpoint doesn't run:** besides blocking findings (below), a checkpoint stops if:
+- your working copy has uncommitted changes
+- the legal settings aren't configured
+- the project is sensitive and has no "Commits" rule letting checkpoint branches commit
+
+Interactive runs ask what to do; scheduled runs print a notice and change nothing.
 
 Checkpoints find earlier runs through their branch names too, so you don't have to merge every checkpoint branch.
 
@@ -122,25 +144,28 @@ A new deep checkpoint re-checks the open items.
 
 ## Guardrails
 
-- **No pushing** without explicit instruction. Claude may ask to push, branch, or open a PR. Enforced by `.claude/settings.json` (`ask` rules), not just instructions.
+- **No pushing** without explicit instruction. Claude may ask to push, branch, or open a PR.
+  - The only exception is auto-push of checkpoint branches (above).
+  - Enforced by `.claude/settings.json`, not just instructions: `ask` rules for pushes and PRs, and `deny` rules for force-pushes and pushes to `main`/`master`.
+  - With auto-push on, the general push `ask` rule is swapped for `allow` rules that match only checkpoint branches. An `ask` rule would override them.
 - **Branches only**, never commits to `main`. Overrides trunk-based advice from other skills.
 - **Compute budget**: no full training, sweeps, full pipeline runs or GPU jobs unless you ask. Checks use smoke configs, `--limit`, or existing logs; ~5 min per command during checkpoints. Expensive commands are listed in `CLAUDE.md` and added as `ask` rules.
 - **Raw data is read-only**; data, weights and secrets are never committed.
 - **Licenses are registered before first use** in `docs/legal/licenses.md`. Unverified licenses stay `unclear`.
-- **Sensitive data**: if `CLAUDE.md` → "Legal and ethics" marks the project as sensitive, Claude reads every staged diff before committing and every push range before asking to push. It holds back anything on the never-publish list, and anything it's unsure about. Every commit needs your approval (a `git commit` `ask` rule), unless you allow otherwise in the session or in `CLAUDE.md` → "Legal and ethics" → "Commits". Pre-commit hooks block sensitive paths and identifier patterns for manual commits too. This is a safety net, not legal advice; open questions go to the contact named in `CLAUDE.md`.
+- **Sensitive data**: if `CLAUDE.md` → "Legal and ethics" marks the project as sensitive, Claude reads every staged diff before committing and every push range before asking to push. It holds back anything on the never-publish list, and anything it's unsure about. Every commit needs your approval, unless you allow otherwise in the session or in `CLAUDE.md` → "Legal and ethics" → "Commits". The recommended rule lets checkpoint branches commit locally; they're never auto-pushed in sensitive projects. Pre-commit hooks block sensitive paths and identifier patterns for manual commits too. This is a safety net, not legal advice; open questions go to the contact named in `CLAUDE.md`.
 - **Rejected ideas stay rejected**: Claude checks `PROGRESS.md` before re-proposing something.
 
 Check that `ask` patterns match how you launch commands: `Bash(python train.py:*)` does not catch `uv run python train.py`.
 
 ## Scheduling
 
-Run a checkpoint regularly as a scheduled task with the prompt `/ml-workflow checkpoint`. One task is enough: a standard run upgrades itself to deep when the project's config says one is due. The schedule itself lives in the task, so match it to the cadence in the project's `CLAUDE.md`.
+Run a checkpoint regularly as a scheduled task with the prompt `/ml-workflow checkpoint unattended`. The word `unattended` tells the skill nobody is there to answer questions, so it takes the safe path or stops with a notice instead of asking. One task is enough: a standard run upgrades itself to deep when the project's config says one is due. The schedule itself lives in the task, so match it to the cadence in the project's `CLAUDE.md`.
 
 - **Desktop scheduled task**: runs on your machine with local files, graphify and your venv. Recommended.
 - **Cloud scheduled task**: only sees what's pushed to GitHub; local tools and data aren't available.
 - `/loop 1h /ml-workflow sanity` inside a session for short-term repetition.
 
-Unattended runs commit to a branch and list pending pushes in the report. If the task isn't on automatic approval it will pause at the first action needing permission.
+Unattended runs commit to a branch, push it if auto-push applies, and otherwise list the pending push in the report. If the task isn't on automatic approval it will pause at the first action needing permission.
 
 ## Customising
 
@@ -151,6 +176,7 @@ Unattended runs commit to a branch and list pending pushes in the report. If the
 ml-workflow/
 ├── SKILL.md                  # modes, rules, checkpoint order, report format
 ├── references/               # loaded only for the mode being run
+│   ├── setup.md
 │   ├── pipeline.md
 │   ├── sanity-checks.md
 │   ├── research.md
@@ -178,5 +204,8 @@ ml-workflow/
 | Repo lacks new features after updating the skill | Setup only copies templates once; ask Claude to re-run the relevant setup step |
 | Scheduled checkpoint does nothing and prints "blocked" | Open Critical findings from the last deep checkpoint; fix and merge, tick them in its report, or tell Claude they're accepted |
 | Checkpoint stalls unattended | Permission prompt; set the scheduled task to automatic approval, or run interactively |
-| Scheduled checkpoint leaves changes uncommitted | Sensitive project with commit approval on; review and commit them yourself, or add a "Commits" exception in `CLAUDE.md` and remove the `git commit` `ask` rule |
+| Scheduled checkpoint prints "uncommitted changes" | Commit or stash your work in progress; checkpoints won't switch branches over it. Files a checkpoint held back from a commit also show up here |
+| Scheduled checkpoint prints "legal not configured" or "may not commit" | Run `/ml-workflow configure`; for sensitive projects, add the recommended "Commits" rule so checkpoint branches can commit locally |
+| Checkpoint branch wasn't pushed | The report's "Remote actions" names the failed condition (sensitive data, a non-permissive or `unclear` model/dataset license, an open legal finding, or the publish check) |
+| Scheduled run behaves as if someone is there | The task prompt must include `unattended`: `/ml-workflow checkpoint unattended` |
 | A companion skill isn't used | Check it's installed in the same Claude install; plugin skills may be namespaced (`agent-skills:…`) |

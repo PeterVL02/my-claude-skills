@@ -10,6 +10,31 @@ This is not legal advice. The goal is to spot problems early and send real quest
 
 The per-project settings live in `CLAUDE.md` → "Legal and ethics" (template: `templates/CLAUDE.md`).
 
+## Configure
+
+Run this during setup, in configure mode, or when a checkpoint finds the section missing or unclear. It needs the user, so it only runs interactively.
+
+1. **Look first**, so every question comes with a suggested answer. Check:
+   - where the data lives and what formats it's in
+   - model and dataset references in code and configs
+   - READMEs, data cards, and any agreements or consent forms mentioned in docs
+2. **Ask in one round** (use AskUserQuestion if available):
+   - **Intended use of outputs:** research only, publication, commercial, or open release of weights.
+   - **Sensitive data?** `yes` / `no` / `not sure`. Explain what counts:
+     - personal data: voices, faces, names, health data, anything that can be linked to a person
+     - data under an agreement or NDA
+     - confidential or unreleased data
+     
+     Treat `not sure` as `yes` until someone can answer. Record it as `yes (unconfirmed: <question>)` and add the question, and who can answer it, to `PROGRESS.md` → "Open questions".
+   - **If sensitive:** what the data is, the terms it's under, the never-publish list, what publishing outputs requires, and who to contact.
+   - **If sensitive, the Commits rule.** Recommend "checkpoint branches may commit locally after the publish check passes; every other commit asks". A local commit publishes nothing; data leaves at push time, and checkpoint branches of sensitive projects are never auto-pushed. Tell the user that without this rule, scheduled checkpoints won't run at all.
+3. **Write the section** and show the user the diff.
+4. **Create `docs/legal/licenses.md`** from `templates/licenses.md` if it's missing. Fill it with the direct dependencies and every model, dataset and piece of copied code you can find. Use Status `unclear` for anything you couldn't verify.
+5. **If sensitive:**
+   - Add the backstop hooks from "Mechanical backstop" below, with regexes agreed with the user.
+   - Set checkpoint push to `never` and fix `.claude/settings.json` to match (`references/checkpoints.md` → "Pushing checkpoint branches").
+   - If the Commits rule says every commit asks, add `"Bash(git commit *)"` to `ask` in `.claude/settings.json`. Leave it out if the rule has the checkpoint exception: an `ask` rule can't be limited to one branch, and it would stall the scheduled runs. The written rule then covers the other commits.
+
 ## License register
 
 The table lives in `docs/legal/licenses.md` (template: `templates/licenses.md`). One row per thing the project uses or ships:
@@ -46,11 +71,13 @@ This applies when `CLAUDE.md` → "Legal and ethics" says the project handles se
    - identifiers: names, e-mails, national IDs, speaker/patient/user IDs, file names or paths that encode them
    - outputs derived closely from the data: generated samples, per-person metrics, confusion examples, embeddings, and weights trained on the data (unless publishing them is cleared in `CLAUDE.md`)
    - data-owner documents: agreements, consent forms, internal emails
-3. **When unsure, don't commit it.** Interactive: show the user the file and the specific concern, then ask. Unattended: leave it unstaged, commit the rest, and list it under "Legal & ethics → Held back" in the report.
+3. **When unsure, don't commit it.** Interactive: show the user the file and the specific concern, then ask. Unattended: leave it unstaged, commit the rest, and list it under "Legal & ethics → Held back" in the report. The file stays in the working copy, so the next checkpoint stops on uncommitted changes until someone has looked at it. That's intended.
 4. Test fixtures must be synthetic. A fixture copied or lightly edited from real data counts as data.
-5. **Get approval.** Show the user the staged file list, anything held back, and any concerns, then commit only after they say yes. The exception is a standing rule under "Commits" in `CLAUDE.md`, or an explicit instruction in this session, that allows committing without asking. Unattended, with no such rule: don't commit. Leave the work staged and list it in the report.
+5. **Get approval.** Show the user the staged file list, anything held back, and any concerns, then commit only after they say yes. The exception is a standing rule under "Commits" in `CLAUDE.md`, or an explicit instruction in this session, that allows committing without asking. An unattended checkpoint only gets this far when such a rule exists; otherwise it stopped at step 1.
 
-**Before asking to push**, run the same check over everything the push would publish: `git log -p <remote>/<branch>..HEAD`, or the whole branch if it's new. Check the history too, not just the final state. A file that was deleted in a later commit is still published. If something sensitive is already in unpushed history, say so and propose a fix. Don't rewrite history without the user's go-ahead, and never rewrite pushed history.
+Match commits however they're written. The `ask` rule matches commands that start with `git commit`, but not `git -C <path> commit` or `git -c k=v commit`, so avoid those forms in sensitive projects. The written rule covers every form.
+
+**Before any push**, run the same check over everything the push would publish: `git log -p <remote>/<branch>..HEAD`, or the whole branch if it's new. Check the history too, not just the final state. A file that was deleted in a later commit is still published. If something sensitive is already in unpushed history, say so and propose a fix. Don't rewrite history without the user's go-ahead, and never rewrite pushed history.
 
 While a legal Blocking finding from a deep checkpoint is open, don't ask to push anything it covers.
 
@@ -70,11 +97,15 @@ Claude's check is the main one. For people committing by hand, and for `git add 
       - id: no-identifiers
         name: Block identifiers from the sensitive dataset
         language: pygrep
-        entry: '<identifier regex, e.g. speaker IDs "spk_\d{4}" or Danish CPR "\b\d{6}-?\d{4}\b">'
+        entry: '<identifier regex, e.g. speaker IDs "spk_\d{4}">'
         types: [text]
+        exclude: '^(CLAUDE\.md|\.pre-commit-config\.yaml|docs/legal/.*)$|\.lock$'
 ```
 
-Tune the path regex with the user. If the repo legitimately commits small CSVs or figures, narrow the pattern instead of dropping the hook.
+Tune both regexes with the user:
+- If the repo legitimately commits small CSVs or figures, narrow the path pattern instead of dropping the hook.
+- Keep the identifier regex specific. A broad one like a Danish CPR number (`\b\d{6}-?\d{4}\b`) also matches any 10-digit number, such as Unix timestamps and IDs in lockfiles and notebooks. If you need one, anchor it with context (e.g. `cpr[:=]\s*\d{6}-?\d{4}`), or rely on the written check instead.
+- The `exclude` keeps the hook off the files where the never-publish rules and examples are written down.
 
 ## Deep-checkpoint review (legal step)
 
