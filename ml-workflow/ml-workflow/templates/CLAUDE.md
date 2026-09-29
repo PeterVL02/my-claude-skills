@@ -26,6 +26,8 @@ Read by the `ml-workflow` skill. Edit here, or run `/ml-workflow configure`.
 - Standard checkpoint: <how and how often, e.g. "weekdays 08:00, desktop scheduled task" / "manual">
 - Deep checkpoint: <every 30 days / every 4th checkpoint / manual>
 - Deep code changes: <report-only / apply-safe (safe simplifications + small review fixes, each its own commit)>
+- Push checkpoint branches: <auto (only when there's no sensitive data, all models and datasets have permissive licenses and pass the publish check) / never>
+- Scheduled task prompt: `/ml-workflow checkpoint unattended`
 - Critical review and legal findings block standard checkpoints until they're fixed, ticked in the deep report, or accepted.
 - Context: <deadlines, crunch periods, compute freezes that change how checkpoints run, e.g. "paper deadline 2026-11-15: no research or council until then"; or "none">
 
@@ -49,7 +51,7 @@ Progress update and the checkpoint report always run.
 <Optional: other skills to run during a checkpoint, e.g. "Update docs/pipeline.svg with the diagram skill". Delete if unused.>
 
 ## Git rules
-- NEVER run `git push`, `gh pr create`, `gh pr merge`, or create tags/releases unless I explicitly ask in the current session. You may ask me whether to push, create a branch, or open a PR.
+- NEVER run `git push`, `gh pr create`, `gh pr merge`, or create tags/releases unless I explicitly ask in the current session. You may ask me whether to push, create a branch, or open a PR. The only exception: a checkpoint pushes its own branch when "Push checkpoint branches" is `auto` and its conditions hold.
 - Never commit to `main`. Work on a branch: `feat/`, `fix/`, `exp/`, `data/`, `docs/`, `chore/`.
 - Conventional commit messages (`feat: …`, `fix: …`, `data: …`, `exp: …`).
 - Never force-push or rewrite pushed history.
@@ -84,9 +86,9 @@ Read by the `ml-workflow` skill (`references/legal-ethics.md`). Not legal advice
 
 - Intended use of outputs: <research only / publication / commercial / open release of weights>. Project license: <MIT / none yet>.
 - License register: `docs/legal/licenses.md`. Add a row before using any new model, dataset, library, framework, service or copied code.
-- Sensitive data: <no / yes: what it is (e.g. voice recordings of identifiable speakers), under what terms (consent form, data-use agreement), which rules apply (GDPR, …)>
+- Sensitive data: <no / yes: what it is (e.g. voice recordings of identifiable speakers), under what terms (consent form, data-use agreement), which rules apply (GDPR, …) / yes (unconfirmed: <open question>)>
 - Never publish (commit or push): <e.g. anything under data/, audio of training speakers, speaker IDs, models trained on the data, per-speaker metrics; or "standard rules only">
-- Commits: <ask before every commit (default when there's sensitive data; enforced by the `git commit` ask rule) / commit without asking / exceptions, e.g. "checkpoint branches may commit without asking">
+- Commits: <no extra rule (not sensitive) / checkpoint branches may commit locally after the publish check passes; every other commit asks (recommended when sensitive) / every commit asks (scheduled checkpoints won't run)>
 - Publishing outputs (weights, samples, demos, papers) requires: <e.g. speaker-anonymity check passed + supervisor sign-off; or "nothing extra">
 - Contact for legal/data questions: <supervisor / data owner / DPO>
 
