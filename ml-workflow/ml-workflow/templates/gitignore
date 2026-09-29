@@ -1,0 +1,42 @@
+# --- ml-workflow defaults ---
+# Data and artifacts
+data/
+!data/**/.gitkeep
+models/
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.h5
+*.parquet
+*.feather
+
+# Experiment tracking
+mlruns/
+wandb/
+lightning_logs/
+outputs/
+multirun/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Claude Code local settings (shared settings.json stays committed)
+.claude/settings.local.json
